@@ -31,6 +31,10 @@ private:
     int maxOccupancy;
     Lock *elevatorLock;
 
+    bool direction;
+    int _numFloors;
+    //int totalWaiting;
+
 };
 
 #endif

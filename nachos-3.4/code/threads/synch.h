@@ -80,6 +80,8 @@ class Lock {
   private:
     const char* name;				// for debugging
     // plus some other stuff you'll need to define
+    
+    Thread* heldThread; //Thread that hcurrently holds lock
 
     List *queue;       // threads waiting on lock to become free
     bool free; // keeps track of hte state of the lock

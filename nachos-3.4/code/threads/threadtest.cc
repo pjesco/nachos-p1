@@ -11,6 +11,7 @@
 
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 
 // testnum is set in main.cc
 int testnum = 1;
@@ -23,7 +24,65 @@ int testnum = 1;
 //	"which" is simply a number identifying the thread, for debugging
 //	purposes.
 //----------------------------------------------------------------------
+#if defined(CHANGED) && defined(THREADS)
 
+#if defined(HW1_SEMAPHORES)
+
+Semaphore* s = new Semaphore("SimpleThread Semaphore", 1);
+
+int SharedVariable;
+void SimpleThread(int which) {
+    int num, val;
+    for (num = 0; num < 5; num++) {
+        val = SharedVariable;
+        printf("*** thread %d sees value %d\n", which, val);
+        currentThread->Yield();
+        s->P();
+        SharedVariable = val+1;
+        s->V();
+        currentThread->Yield();
+    }
+    val = SharedVariable;
+    printf("Thread %d sees final value %d\n", which, val);
+}
+
+#elif defined(HW1_LOCKS)
+
+Lock* l = new Lock("HW1 Test Lock");
+
+int SharedVariable;
+void SimpleThread(int which) {
+    int num, val;
+    for (num = 0; num < 5; num++) {
+        val = SharedVariable;
+        printf("*** thread %d sees value %d\n", which, val);
+        currentThread->Yield();
+        l->Acquire();
+        SharedVariable = val+1;
+        l->Release();
+        currentThread->Yield();
+    }
+    val = SharedVariable;
+    printf("Thread %d sees final value %d\n", which, val);
+}
+
+#else
+
+int SharedVariable;
+void SimpleThread(int which) {
+    int num, val;
+    for (num = 0; num < 5; num++) {
+        val = SharedVariable;
+        printf("*** thread %d sees value %d\n", which, val);
+        currentThread->Yield();
+        SharedVariable = val+1;
+        currentThread->Yield();
+    }
+    val = SharedVariable;
+    printf("Thread %d sees final value %d\n", which, val);
+}
+#endif
+#else
 void
 SimpleThread(int which)
 {
@@ -34,6 +93,8 @@ SimpleThread(int which)
         currentThread->Yield();
     }
 }
+
+#endif
 
 //----------------------------------------------------------------------
 // ThreadTest1
@@ -77,6 +138,22 @@ ThreadTest(int n) {
 }
 
 #else 
+#if defined(CHANGED) && defined(THREADS)
+
+void
+ThreadTest(int n)
+{
+    DEBUG('t', "Entering P1 ThreadTest");
+    Thread *t;
+
+    for (int i = 1; i <= n; i++) {
+        t = new Thread("forked thread");
+        t->Fork(SimpleThread, i);
+    }
+    SimpleThread(0);
+}
+
+#else
 
 void
 ThreadTest()
@@ -90,5 +167,6 @@ ThreadTest()
 	break;
     }
 }
+#endif
 
 #endif 

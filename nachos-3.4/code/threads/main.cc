@@ -60,6 +60,7 @@ extern int testnum;
 // External functions used by this file
 
 extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
+extern void ThreadTest(int n);
 extern void ElevatorTest(int numFloors, int numPersons);
 extern void Ping();
 extern void Print(char *file), PerformanceTest(void);
@@ -106,7 +107,8 @@ main(int argc, char **argv)
 #if defined(CHANGED) && defined(HW1_CONDITION)
 	Ping();
 #else
-    ThreadTest();
+    //ThreadTest();
+	ThreadTest(4);
 #endif
 
 
