@@ -51,13 +51,13 @@ void SimpleThread(int which) {
 #elif defined(HW1_LOCKS)
 
 Lock* l = new Lock("HW1 Test Lock");
-int numThreads = 1;
+int barrier = 1;
 
 int SharedVariable;
 void SimpleThread(int which) {
     int num, val;
     l->Acquire();
-    numThreads--;
+    barrier--;
     l->Release();
     for (num = 0; num < 5; num++) {
         l->Acquire();
@@ -70,12 +70,12 @@ void SimpleThread(int which) {
 
     }
     l->Acquire();
-    numThreads++;
+    barrier++;
     l->Release();
     int curr;
     do {
         l->Acquire();
-        curr = numThreads;
+        curr = barrier;
         l->Release();
         currentThread->Yield();
     } while (curr < 1);
