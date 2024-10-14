@@ -34,35 +34,55 @@ int SharedVariable;
 void SimpleThread(int which) {
     int num, val;
     for (num = 0; num < 5; num++) {
+        s->P();
         val = SharedVariable;
         printf("*** thread %d sees value %d\n", which, val);
         currentThread->Yield();
-        s->P();
         SharedVariable = val+1;
         s->V();
         currentThread->Yield();
     }
+    s->P();
     val = SharedVariable;
+    s->V();
     printf("Thread %d sees final value %d\n", which, val);
 }
 
 #elif defined(HW1_LOCKS)
 
 Lock* l = new Lock("HW1 Test Lock");
+int numThreads = 1;
 
 int SharedVariable;
 void SimpleThread(int which) {
     int num, val;
+    l->Acquire();
+    numThreads--;
+    l->Release();
     for (num = 0; num < 5; num++) {
+        l->Acquire();
         val = SharedVariable;
         printf("*** thread %d sees value %d\n", which, val);
         currentThread->Yield();
-        l->Acquire();
         SharedVariable = val+1;
         l->Release();
         currentThread->Yield();
+
     }
+    l->Acquire();
+    numThreads++;
+    l->Release();
+    int curr;
+    do {
+        l->Acquire();
+        curr = numThreads;
+        l->Release();
+        currentThread->Yield();
+    } while (curr < 1);
+
+    l->Acquire();
     val = SharedVariable;
+    l->Release();
     printf("Thread %d sees final value %d\n", which, val);
 }
 
@@ -118,7 +138,7 @@ ThreadTest1()
 // 	Invoke a test routine.
 //----------------------------------------------------------------------
 
-#ifdef HW1_SEMAPHORES
+#if defined(HW1_SEMAPHORES) || defined(HW1_LOCKS)
 
 int numThreadsActive; // used to implement barrier upon completion
 
