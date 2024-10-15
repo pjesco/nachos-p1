@@ -86,6 +86,40 @@ void SimpleThread(int which) {
     printf("Thread %d sees final value %d\n", which, val);
 }
 
+#elif defined(HW1_CONDITION)
+Lock* l = new Lock("HW1 Test Lock");
+Condition* c = new Condition("SimpleThread Condition");
+int barrier = 1;
+
+int SharedVariable;
+void SimpleThread(int which) {
+    int num, val;
+    l->Acquire();
+    barrier--;
+    l->Release();
+    for (num = 0; num < 5; num++) {
+        l->Acquire();
+        val = SharedVariable;
+        printf("*** thread %d sees value %d\n", which, val);
+        currentThread->Yield();
+        SharedVariable = val+1;
+        l->Release();
+        currentThread->Yield();
+    }
+    l->Acquire();
+    barrier++;
+    if (barrier == 1)
+        c->Broadcast(l);
+    else
+        c->Wait(l);
+    l->Release();
+
+    l->Acquire();
+    val = SharedVariable;
+    l->Release();
+    printf("Thread %d sees final value %d\n", which, val);
+}
+
 #else
 
 int SharedVariable;
@@ -138,7 +172,7 @@ ThreadTest1()
 // 	Invoke a test routine.
 //----------------------------------------------------------------------
 
-#if defined(HW1_SEMAPHORES) || defined(HW1_LOCKS)
+#if defined(HW1_SEMAPHORES) || defined(HW1_LOCKS) || defined(HW1_CONDITION)
 
 int numThreadsActive; // used to implement barrier upon completion
 

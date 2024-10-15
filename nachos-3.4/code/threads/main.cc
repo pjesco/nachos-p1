@@ -104,16 +104,16 @@ main(int argc, char **argv)
       }
     }
 
-#if defined(CHANGED) && defined(HW1_CONDITION)
+#if defined(HW1_CONDITION)
 	Ping();
-#else
-    //ThreadTest();
+	ThreadTest(4);
+#elif defined(HW1_LOCKS) || defined(HW1_SEMAPHORES)
 	ThreadTest(4);
 #endif
 
 
-#if defined(CHANGED) && defined(HW1_ELEVATOR)
-	//ElevatorTest(5, 20);
+#if defined(HW1_ELEVATOR)
+	ElevatorTest(5, 5);
 #else
     ThreadTest();
 #endif

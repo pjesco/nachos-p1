@@ -16,9 +16,12 @@ PingPong(int which)
 
     pingLock->Acquire();
     for (i = 0; i < 5; i++) {
+    //printf("Thread: %d, i: %d\n", which, i);
 		printf("%s\n", msg);
 		cv->Signal(pingLock);
+    //printf("Signal\n");
 		cv->Wait(pingLock);
+    //printf("Done Waiting\n");
     }
     pingLock->Release();
 }

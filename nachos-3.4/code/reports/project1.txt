@@ -1,0 +1,12 @@
+Ankith Praveen, Parker Esco, Syed Talha Khalid
+
+For Exercise 1, when ran, the program printed the same number for each thread, only incrementing after each iteration through every thread, in this case, with 4 threads, finishing with a value of 4. 
+This is because access to the shared variable was not synchronized and threads were reading the same value for each loop instead of the one incremented by another thread.
+When modified to contain the semaphore, the output incremented the shared variable with each iteration of each thread, finishing with a value of 20 for 5 threads, with all threads seeing the same value at the end.
+
+For Exercise 2, we implemented the Lock methods using the Semaphore code as a guide. 
+We tested the locks using by modifying SimpleThread to use locks instead of semaphores and got the same correct output as in the semaphore test, with all threads seeing a final value of 5*number_of_threads. 
+
+For Exercise 3, we again used Semaphore and Lock as a guide to implement the Condition variable. We tested it using the provided ping.cc and the output was correct even when using the -rs flag.
+
+For Exercise 4, we condition variables and locks to build the elevator system using the guide by the professor.
