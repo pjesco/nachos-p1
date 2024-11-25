@@ -33,6 +33,7 @@ Machine *machine;	// user program memory and registers
 MemoryManager* mm;
 Lock* mmLock;
 PCBManager* pcbManager;
+Lock* pcbManagerLock;
 #endif
 
 #ifdef NETWORK
@@ -156,6 +157,7 @@ Initialize(int argc, char **argv)
     mm = new MemoryManager();
     mmLock = new Lock("mmLock");
     pcbManager = new PCBManager(MAX_PROCESSES);
+    pcbManagerLock = new Lock("pcbManagerLock");
 #endif
 
 #ifdef FILESYS

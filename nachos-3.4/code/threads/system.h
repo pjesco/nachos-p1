@@ -34,9 +34,11 @@ extern Timer *timer;				// the hardware alarm clock
 #include "memorymanager.h"
 #include "synch.h"
 #include "pcbmanager.h"
+#include "addrspace.h"
 extern Machine* machine;	// user program memory and registers
 extern MemoryManager* mm;
 extern Lock* mmLock;
+extern Lock* pcbManagerLock;
 extern PCBManager* pcbManager;
 #endif
 

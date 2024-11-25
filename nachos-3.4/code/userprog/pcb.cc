@@ -35,6 +35,10 @@ int PCB::RemoveChild(PCB* pcb){
 
 }
 
+void PCB::SetParent(PCB* pcb) {
+    parent = pcb;
+}
+
 
 bool PCB::HasExited() {
     return exitStatus == -9999 ? false : true;
@@ -50,4 +54,14 @@ void decspn(int arg) {
 
 void PCB::DeleteExitedChildrenSetParentNull() {
     children->Mapcar(decspn);
+}
+
+void PrintChild(int arg) {
+    PCB* pcb = (PCB*)arg;
+    printf("Child: [%d]\n", pcb->pid);
+}
+
+void PCB::CallPrint() {
+    printf("Printing children:\n");
+    children->Mapcar(PrintChild);
 }

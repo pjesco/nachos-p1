@@ -20,8 +20,10 @@ class PCB {
 
         void AddChild(PCB* pcb);
         int RemoveChild(PCB* pcb);
+        void SetParent(PCB* pcb);
         bool HasExited();
         void DeleteExitedChildrenSetParentNull();
+        void CallPrint();
 
     private:
         List* children;

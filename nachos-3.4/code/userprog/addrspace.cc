@@ -124,6 +124,9 @@ AddrSpace::AddrSpace(OpenFile *executable)
         ReadFile(executable, noffH.initData.inFileAddr, noffH.initData.virtualAddr, noffH.initData.size);
     }
     valid = true;
+
+    printf("Loaded Program: [%d] code | [%d] data | [%d] bss\n",
+        noffH.code.size, noffH.initData.size, noffH.uninitData.size);
 }
 
 
@@ -161,8 +164,12 @@ AddrSpace::AddrSpace(AddrSpace* space) {
     mmLock->Acquire();
 
     // 2. Check if there is enough free memory to make the copy. IF not, fail
-    ASSERT(n <= mm->GetFreePageCount());
+    //ASSERT(n <= mm->GetFreePageCount());
     // Change this to informiing caller that constructor failed using valid=false;
+    if (n > mm->GetFreePageCount()) {
+        valid = false;
+        return;
+    }
 
     // 3. Create a new pagetable of same size as source addr space
     pageTable = new TranslationEntry[n];
@@ -198,6 +205,11 @@ AddrSpace::AddrSpace(AddrSpace* space) {
 
 AddrSpace::~AddrSpace()
 {
+    mmLock->Acquire();
+    for (unsigned int i = 0; i < GetNumPages(); i++) {
+        mm->DeallocatePage(pageTable[i].physicalPage);
+    }
+    mmLock->Release();
    delete pageTable;
 }
 
@@ -256,6 +268,10 @@ void AddrSpace::RestoreState()
 {
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
+}
+
+void AddrSpace::SetPCB(PCB* _pcb) {
+    pcb = _pcb;
 }
 
 
