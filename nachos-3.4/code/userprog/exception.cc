@@ -124,7 +124,7 @@ int doFork(int functionAddr) {
         currentThread->space->pcb->pid);
     if (currentThread->space->GetNumPages() > mm->GetFreePageCount()) {
         printf("Not enough memory for new child process\n");
-        DEBUG('a', "Fork: Not enough space!\n");
+        //DEBUG('a', "Fork: Not enough space!\n");
         //printf("Free Page Count: [%d]", mm->GetFreePageCount());
         return -1;
     }
@@ -399,7 +399,7 @@ ExceptionHandler(ExceptionType which)
     int type = machine->ReadRegister(2);
 
     if ((which == SyscallException) && (type == SC_Halt)) {
-	DEBUG('a', "Shutdown, initiated by user program.\n");
+	//DEBUG('a', "Shutdown, initiated by user program.\n");
    	interrupt->Halt();
     } else  if ((which == SyscallException) && (type == SC_Exit)) {
         // Implement Exit system call
