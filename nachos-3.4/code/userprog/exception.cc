@@ -62,7 +62,7 @@ void doExit(int status) {
 
     PCB* pcb = currentThread->space->pcb;
 
-    printf("System Call: [%d] invoked [Exit]\n",
+    printf("System Call: [%d] invoked Exit\n",
         pcb->pid);
     printf ("Process [%d] exits with [%d]\n",
         pcb->pid, status);
@@ -120,7 +120,7 @@ int doFork(int functionAddr) {
     // 1. Check if sufficient memory exists to create new process
     // currentThread->space->GetNumPages() <= mm->GetFreePageCount()
     // if check fails, return -1
-    printf("System Call: [%d] invoked [Fork]\n",
+    printf("System Call: [%d] invoked Fork\n",
         currentThread->space->pcb->pid);
     if (currentThread->space->GetNumPages() > mm->GetFreePageCount()) {
         printf("Not enough memory for new child process\n");
@@ -193,7 +193,7 @@ int doFork(int functionAddr) {
 int doExec(char* filename) {
 
     // Use progtest.cc:StartProcess() as a guide
-    printf("System Call: [%d] invoked [Exec]\n",
+    printf("System Call: [%d] invoked Exec\n",
         currentThread->space->pcb->pid);
     printf("Exec Program: [%d] loading [%s]\n",
         currentThread->space->pcb->pid, filename);
@@ -244,7 +244,7 @@ int doExec(char* filename) {
 
 
 int doJoin(int pid) {
-    printf("System Call:[%d] invoked [Join]\n",
+    printf("System Call:[%d] invoked Join\n",
         currentThread->space->pcb->pid);
 
     //printf("Pre Join Free Page Count: [%d]\n", mm->GetFreePageCount());
@@ -277,7 +277,7 @@ int doJoin(int pid) {
 
 int doKill (int pid) {
 
-    printf("System Call:[%d] invoked [Kill]\n",
+    printf("System Call:[%d] invoked Kill\n",
         currentThread->space->pcb->pid);
     // 1. Check if the pid is valid and if not, return -1
     PCB* pcb = pcbManager->GetPCB(pid);
@@ -330,7 +330,7 @@ void doYield() {
     //Printing Children for debugging
     //currentThread->space->pcb->CallPrint();
 
-    printf("System Call:[%d] invoked [Yield]\n",
+    printf("System Call:[%d] invoked Yield\n",
         currentThread->space->pcb->pid);
     currentThread->Yield();
 }
