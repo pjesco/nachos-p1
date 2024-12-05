@@ -115,7 +115,7 @@ main(int argc, char **argv)
 #if defined(HW1_ELEVATOR)
 	ElevatorTest(5, 5);
 #else
-    ThreadTest();
+    //ThreadTest();
 #endif
 
 

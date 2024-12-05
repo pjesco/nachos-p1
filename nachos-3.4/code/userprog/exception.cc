@@ -49,6 +49,29 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
+void doClose(int fid) {
+    printf("Syscall Call: [%d] invoked Open.\n", 
+        currentThread->space->pcb->pid);
+    
+    SysOpenFile* ofile = sofManager->GetOpenFile(fid);
+    if (ofile == NULL) {
+        printf("Cannot Close: Not in System\n");
+        return;
+    }
+    char* name = ofile->GetOpenFileName();
+    int ret = currentThread->space->pcb->RemoveUserFile(name);
+    if (ret == -1) {
+        printf("Cannot Close: Not in Your Files\n");
+        return;
+    }
+
+    ofile->RemoveReader();
+    if (ofile->GetReaders() == 0) {
+        sofManager->RemoveFile(fid);
+    }
+}
+
+
 void doExit(int status) {
     //printf("Pre Exit Free Page Count: [%d]\n", mm->GetFreePageCount());
     
@@ -68,6 +91,16 @@ void doExit(int status) {
 
     // Delete exited children and set parent null for non-exited ones
     pcb->DeleteExitedChildrenSetParentNull();
+
+    //Close procs files
+    int n = pcb->GetUserArraySize();
+    for (int i = 0; i < n; i++) {
+        char* name = pcb->GetOpenUserFilebyID(i)->GetFileName();
+        SysOpenFile* sf = sofManager->HasFile(name);
+        if (sf != NULL) {
+            doClose(sf->GetFileID());
+        }
+    }
 
     // Manage PCB memory As a child process
     if(pcb->parent == NULL) pcbManager->DeallocatePCB(pcb);
@@ -412,27 +445,6 @@ OpenFileId doOpen(char* fileName) {
     return fid;
 }
 
-void doClose(int fid) {
-    printf("Syscall Call: [%d] invoked Open.\n", 
-        currentThread->space->pcb->pid);
-    
-    SysOpenFile* ofile = sofManager->GetOpenFile(fid);
-    if (ofile == NULL) {
-        printf("Cannot Close: Not in System\n");
-        return;
-    }
-    char* name = ofile->GetOpenFileName();
-    int ret = currentThread->space->pcb->RemoveUserFile(name);
-    if (ret == -1) {
-        printf("Cannot Close: Not in Your Files\n");
-        return;
-    }
-
-    ofile->RemoveReader();
-    if (ofile->GetReaders() == 0) {
-        sofManager->RemoveFile(fid);
-    }
-}
 
 void doWrite( int bufva, int size, int fid) {
     printf("Syscall Call: [%d] invoked Write.\n", 

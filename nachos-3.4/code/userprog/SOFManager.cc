@@ -1,4 +1,5 @@
 #include "SOFManager.h"
+#include "system.h"
 
 SOFManager::SOFManager(int maxFiles) {
     bitmap = new BitMap(maxFiles);
