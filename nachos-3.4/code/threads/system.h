@@ -35,11 +35,15 @@ extern Timer *timer;				// the hardware alarm clock
 #include "synch.h"
 #include "pcbmanager.h"
 #include "addrspace.h"
+#include "UserOpenFile.h"
+#include "SOFManager.h"
 extern Machine* machine;	// user program memory and registers
 extern MemoryManager* mm;
 extern Lock* mmLock;
 extern Lock* pcbManagerLock;
 extern PCBManager* pcbManager;
+extern SOFManager* sofManager;
+extern Lock* sofManagerLock;
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB

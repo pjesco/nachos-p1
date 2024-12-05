@@ -34,6 +34,8 @@ MemoryManager* mm;
 Lock* mmLock;
 PCBManager* pcbManager;
 Lock* pcbManagerLock;
+SOFManager* sofManager;
+Lock* sofManagerLock;
 #endif
 
 #ifdef NETWORK
@@ -158,6 +160,8 @@ Initialize(int argc, char **argv)
     mmLock = new Lock("mmLock");
     pcbManager = new PCBManager(MAX_PROCESSES);
     pcbManagerLock = new Lock("pcbManagerLock");
+    sofManager = new SOFManager(100);
+    sofManagerLock = new Lock("sofManagerLock");
 #endif
 
 #ifdef FILESYS

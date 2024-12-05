@@ -92,6 +92,12 @@ AddrSpace::AddrSpace(OpenFile *executable)
     pcb = pcbManager->AllocatePCB();
     pcb->thread = currentThread;
 
+    //Allocate OpenUserFiles
+    /*openUserFiles = new UserOpenFile*[MAXUSERFILES];
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        openUserFiles[i] = NULL;
+    }*/
+
     DEBUG('a', "Initializing address space, num pages %d, size %d\n",
 					numPages, size);
 // first, set up the translation
@@ -174,6 +180,9 @@ AddrSpace::AddrSpace(AddrSpace* space) {
     // 3. Create a new pagetable of same size as source addr space
     pageTable = new TranslationEntry[n];
     numPages = n;
+
+    //Allocate OpenUserFiles
+    //openUserFiles = new UserOpenFile*[MAXUSERFILES];
 
     // 4. Make a copy of the PTEs but allocate new physical pages
     TranslationEntry* ppt = space->GetPageTable();
@@ -283,3 +292,12 @@ unsigned int AddrSpace::Translate(unsigned int virtualAddr) {
         int physicalAddr = frameNumber*PageSize + pageOffset;
         return physicalAddr;
 }
+
+/*UserOpenFile* AddrSpace::GetOpenUserFile(char* name) {
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        if (openUserFiles[i]->GetFileName() == name) {
+            return openUserFiles[i];
+        }
+    }
+    return NULL;
+}*/

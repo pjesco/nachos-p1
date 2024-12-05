@@ -16,6 +16,7 @@
 #include "copyright.h"
 #include "filesys.h"
 #include "pcb.h"
+#include "UserOpenFile.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
 
@@ -40,6 +41,7 @@ class AddrSpace {
     void SetPCB(PCB* _pcb);
     bool valid; // is AddrSpace valid
     void ReadFile(OpenFile *file, int offset, int virtualAddr, int size); // Read from file into a user process' virtual address space.
+    //UserOpenFile* GetOpenUserFile(char*);
 
 
   private:
@@ -47,6 +49,7 @@ class AddrSpace {
 					// for now!
     unsigned int numPages;		// Number of pages in the virtual
 					// address space
+    //UserOpenFile** openUserFiles;
 };
 
 #endif // ADDRSPACE_H

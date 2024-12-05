@@ -3,10 +3,15 @@
 
 #include "list.h"
 #include "pcbmanager.h"
+#include "UserOpenFile.h"
+#include "SOFManager.h"
+
+#define MAXUSERFILES 40
 
 class Thread;
 class PCBManager;
 extern PCBManager* pcbManager;
+class UserOpenFile;
 
 class PCB {
 
@@ -24,9 +29,16 @@ class PCB {
         bool HasExited();
         void DeleteExitedChildrenSetParentNull();
         void CallPrint();
+        void AddUserFile(char*, int, int, int);
+        int RemoveUserFile(char*);
+        UserOpenFile* GetOpenUserFile(char*);
+        UserOpenFile* GetOpenUserFilebyID(int);
+        int GetUserArraySize();
+        int FindOpenSpot();
 
     private:
         List* children;
+        UserOpenFile** openUserFiles;
 
 };
 

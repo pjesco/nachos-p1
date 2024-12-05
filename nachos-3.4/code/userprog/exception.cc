@@ -49,7 +49,6 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
-
 void doExit(int status) {
     //printf("Pre Exit Free Page Count: [%d]\n", mm->GetFreePageCount());
     
@@ -361,8 +360,6 @@ char* readString1(int virtAddr) {
 
 
 
-
-
 // This implementation is correct!
 // perform MMU translation to access physical memory
 char* readString(int virtualAddr) {
@@ -389,12 +386,125 @@ char* readString(int virtualAddr) {
 
 void doCreate(char* fileName)
 {
-    printf("Syscall Call: [%d] invoked Create.\n", currentThread->space->pcb->pid);
+    printf("Syscall Call: [%d] invoked Create.\n", 
+        currentThread->space->pcb->pid);
     fileSystem->Create(fileName, 0);
 }
 
-void
-ExceptionHandler(ExceptionType which)
+OpenFileId doOpen(char* fileName) {
+    printf("Syscall Call: [%d] invoked Open.\n", 
+        currentThread->space->pcb->pid);
+    int index = currentThread->space->pcb->FindOpenSpot();
+    if (index == -1) {
+        printf("User File space full, cannot add anymore\n");
+        return -1;
+    }
+    OpenFileId fid;
+    SysOpenFile* ofile = sofManager->HasFile(fileName);
+    if (ofile != NULL) {
+        ofile->AddReader();
+        fid = (OpenFileId)ofile->GetFileID();
+    } else {
+        OpenFile* newFile = fileSystem->Open(fileName);
+        fid = sofManager->AddFile(newFile, fileName);
+    }
+    currentThread->space->pcb->AddUserFile(fileName, fid, 0, index);
+    return fid;
+}
+
+void doClose(int fid) {
+    printf("Syscall Call: [%d] invoked Open.\n", 
+        currentThread->space->pcb->pid);
+    
+    SysOpenFile* ofile = sofManager->GetOpenFile(fid);
+    if (ofile == NULL) {
+        printf("Cannot Close: Not in System\n");
+        return;
+    }
+    char* name = ofile->GetOpenFileName();
+    int ret = currentThread->space->pcb->RemoveUserFile(name);
+    if (ret == -1) {
+        printf("Cannot Close: Not in Your Files\n");
+        return;
+    }
+
+    ofile->RemoveReader();
+    if (ofile->GetReaders() == 0) {
+        sofManager->RemoveFile(fid);
+    }
+}
+
+void doWrite( int bufva, int size, int fid) {
+    printf("Syscall Call: [%d] invoked Write.\n", 
+        currentThread->space->pcb->pid);
+    char* buffer = new char[size+1];
+    //OpenFile* file = currentThread->space->pcb->GetOpenFile(fid);
+    OpenFile* file = sofManager->GetOpenFile(fid)->GetOpenFile();
+    char* name = sofManager->GetOpenFile(fid)->GetOpenFileName();
+
+    UserOpenFile* ret = currentThread->space->pcb->GetOpenUserFile(name);
+    if (ret == NULL) {
+        printf("Cannot Write: You have not opened this file\n");
+        return;
+    }
+
+    int offset = currentThread->space->pcb->GetOpenUserFile(name)->GetOffset();
+    
+    /*int counter = 0;
+    while( counter < size) {
+        file->ReadAt(&(machine->mainMemory[currentThread->spaceTranslate(buffer+counter)]),
+            1, offset+counter);
+        counter++;
+    }*/
+
+
+    int i = 0;
+    unsigned int physicalAddr = currentThread->space->Translate(bufva);
+
+    //file->Write(bufva,)
+    bcopy(&(machine->mainMemory[physicalAddr]),&buffer[i],1);
+
+
+    while (i < size) {
+        i++;
+        physicalAddr = currentThread->space->Translate(bufva+i);
+        bcopy(&(machine->mainMemory[physicalAddr]),&buffer[i],1);
+    }
+
+    buffer[size] = '\0';
+
+    int delta = file->Write(buffer, size);
+    currentThread->space->pcb->GetOpenUserFile(name)->SetOffset(delta);
+}
+
+int doRead(int bufva, int size, OpenFileId id) {
+    printf("Syscall Call: [%d] invoked Read.\n", 
+        currentThread->space->pcb->pid);
+    char* buffer = new char[size+1];
+    buffer[size] = '\0';
+    //OpenFile* file = currentThread->space->pcb->GetOpenFile(id);
+    OpenFile* file = sofManager->GetOpenFile(id)->GetOpenFile();
+    char* name = sofManager->GetOpenFile(id)->GetOpenFileName();
+    int offset = currentThread->space->pcb->GetOpenUserFile(name)->GetOffset();
+    
+    UserOpenFile* ret = currentThread->space->pcb->GetOpenUserFile(name);
+    if (ret == NULL) {
+        printf("Cannot Write: You have not opened this file\n");
+        return -1;
+    }
+
+    file->Read(buffer, size);
+
+    //unsigned int physicalAddr = currentThread->space->Translate(bufva);
+
+    for (int i = 0; i < size; i++) {
+        int physicalAddr = currentThread->space->Translate(bufva+i);
+        bcopy(&buffer[i], &(machine->mainMemory[physicalAddr]),1);
+    }
+    return size;
+}
+
+void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
 
@@ -429,6 +539,29 @@ ExceptionHandler(ExceptionType which)
         int virtAddr = machine->ReadRegister(4);
         char* fileName = readString(virtAddr);
         doCreate(fileName);
+        incrementPC();
+    } else if((which == SyscallException) && (type == SC_Open)) {
+        int virtAddr = machine->ReadRegister(4);
+        char* fileName = readString(virtAddr);
+        int ret =doOpen(fileName);
+        machine->WriteRegister(2, ret);
+        incrementPC();
+    } else if((which == SyscallException) && (type == SC_Write)){
+        int bufva = machine->ReadRegister(4);
+        int size  = machine->ReadRegister(5);
+        int OpenID = machine->ReadRegister(6);
+        doWrite(bufva, size, OpenID);
+        incrementPC();
+    }  else if ((which == SyscallException) && (type == SC_Read)) {
+        int bfva = machine->ReadRegister(4);
+        int size  = machine->ReadRegister(5);
+        int OpenID = machine->ReadRegister(6);
+        int ret = doRead(bfva, size, OpenID);
+        machine->WriteRegister(2, ret);
+        incrementPC();
+    } else if ((which = SyscallException) && (type == SC_Close)) {
+        int fid = machine->ReadRegister(4);
+        doClose(fid);
         incrementPC();
     } else {
 	printf("Unexpected user mode exception %d %d\n", which, type);

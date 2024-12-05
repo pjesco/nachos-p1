@@ -8,7 +8,10 @@ PCB::PCB(int id) {
     children = new List();
     thread = NULL;
     exitStatus = -9999;
-
+    openUserFiles = new UserOpenFile*[MAXUSERFILES];
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        openUserFiles[i] = NULL;
+    }
 }
 
 
@@ -64,4 +67,52 @@ void PrintChild(int arg) {
 void PCB::CallPrint() {
     printf("Printing children:\n");
     children->Mapcar(PrintChild);
+}
+
+UserOpenFile* PCB::GetOpenUserFile(char* name) {
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        if (openUserFiles[i]->GetFileName() == name) {
+            return openUserFiles[i];
+        }
+    }
+    return NULL;
+}
+
+UserOpenFile* PCB::GetOpenUserFilebyID(int i) {
+    if (i < 0 || i >= MAXUSERFILES || openUserFiles[i]==NULL)
+        return NULL;
+    
+    return openUserFiles[i];
+}
+
+OpenFile* GetOpenFile(int id) {
+    return sofManager->GetOpenFile(id)->GetOpenFile();
+}
+
+int PCB::GetUserArraySize() {
+    return MAXUSERFILES;
+}
+
+int PCB::FindOpenSpot() {
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        if (openUserFiles[i] == NULL)
+            return i;
+    }
+    return -1;      //No open spots
+}
+
+void PCB::AddUserFile(char* name, int fid, int offset, int pcbi) {
+    UserOpenFile* ufile = new UserOpenFile(name, fid, offset);
+    openUserFiles[pcbi] = ufile;
+}
+
+int PCB::RemoveUserFile(char* name) {
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        if (openUserFiles[i] != NULL && openUserFiles[i]->GetFileName()==name) {
+            delete openUserFiles[i];
+            openUserFiles[i] = NULL;
+            return i;
+        }
+    }
+    return -1;
 }
