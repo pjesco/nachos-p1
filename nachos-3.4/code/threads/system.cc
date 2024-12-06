@@ -37,6 +37,7 @@ Lock* pcbManagerLock;
 SOFManager* sofManager;
 Lock* sofManagerLock;
 Lock* fileLock;
+Lock* bufferLock;
 #endif
 
 #ifdef NETWORK
@@ -164,6 +165,7 @@ Initialize(int argc, char **argv)
     sofManager = new SOFManager(100);
     sofManagerLock = new Lock("sofManagerLock");
     fileLock = new Lock("fileLock");
+    bufferLock = new Lock("bufferLock");
 #endif
 
 #ifdef FILESYS

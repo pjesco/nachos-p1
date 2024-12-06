@@ -473,6 +473,7 @@ void doWrite( int bufva, int size, int fid) {
         }
     }
 
+    bufferLock->Acquire();
     int i = 0;
     unsigned int physicalAddr = currentThread->space->Translate(bufva);
 
@@ -484,6 +485,7 @@ void doWrite( int bufva, int size, int fid) {
         //printf("Write Phys Addr: %d\n", physicalAddr);
         bcopy(&(machine->mainMemory[physicalAddr]),&buffer[i],1);
     }
+    bufferLock->Release();
 
     if (fid == ConsoleOutput) {
         for (int j = 0; j < size; j++) {
@@ -494,10 +496,12 @@ void doWrite( int bufva, int size, int fid) {
         return;
     }
     
+    fileLock->Acquire();
     int offset = ret->GetOffset();
     for (int j = 0; j < size; j++) {
         file->WriteAt(buffer+j, 1, offset + j);
     }
+    fileLock->Release();
     ret->SetOffset(size);
 
     delete buffer;
@@ -523,10 +527,12 @@ int doRead(int bufva, int size, OpenFileId id) {
             }
             j++;
         }
+        bufferLock->Acquire();
         for (int i = 0; i < size; i++) {
             int physicalAddr = currentThread->space->Translate(bufva+i);
             bcopy(&buffer[i], &(machine->mainMemory[physicalAddr]),1);
-    }
+        }
+        bufferLock->Release();
     } else {
         OpenFile* file = sofManager->GetOpenFile(id)->GetOpenFile();
         int length = file->Length();
@@ -559,10 +565,12 @@ int doRead(int bufva, int size, OpenFileId id) {
             ret->SetOffset(numBytes);
             return 0;
         }
+        bufferLock->Acquire();
         for (int i = 0; i < numBytes; i++) {
             int physicalAddr = currentThread->space->Translate(bufva+i);
             bcopy(&buffer[i], &(machine->mainMemory[physicalAddr]),1);
-        } 
+        }
+        bufferLock->Release(); 
 
         size = min(numBytes, size);
         ret->SetOffset(size);
