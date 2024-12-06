@@ -1,2 +1,33 @@
 Ankith Praveen, Parker Esco, Syed Talha Khalid
 
+    For our code, we first implemented some object classes pertaining 
+to files and managing them. One class is the UserOpenFile class.
+This class holds process specific information for a file, such as the
+offset, name, and index in the process array of opened files. We
+implemented this array in the PCB class, allowing us to group all
+files a process has opened together. Nex was the SysOpenFile class.
+This object held the fileid, OpenFile object, and the numbere of
+processes that have opened it. We also created an sofManagere class,
+which acted similar to the PCBManager, controlling allocation and
+ID issuences for each file.
+    After implementing these classes, we begain creating the syscalls.
+Open and close were sraightforward, with open instantiating the
+related file objects and close reemoving them from the reader's access.
+    For write and read, we had separate course depending on if the console
+variable was passed through, reading and printing to the console if so,
+and reeading or writing to files if not.
+    When performing a close, our status (which is thee numbeer of bytes
+read) is one less than the sample output. We are not sure if this is
+due to us counting starting from 0 because the length of the file is
+equal to our output.
+
+    To run tests, simply move into the userprog/ directory, make and 
+perform ./nachos -x ../test/[testfile]. If executing from userprog
+then the files specified in the program being ran must eithere be in
+userprog or their path given if they are in another folder.
+
+Ankith: UserOpenFile, Open, close
+
+Talha: SysOpenFile, sofManager
+
+Parker: Read, Write
