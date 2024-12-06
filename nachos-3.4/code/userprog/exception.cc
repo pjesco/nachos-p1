@@ -489,6 +489,7 @@ void doWrite( int bufva, int size, int fid) {
         for (int j = 0; j < size; j++) {
             printf("%c",buffer[j]);
         }
+        printf("\n");
         delete buffer;
         return;
     }
