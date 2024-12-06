@@ -35,6 +35,7 @@ class PCB {
         UserOpenFile* GetOpenUserFilebyID(int);
         int GetUserArraySize();
         int FindOpenSpot();
+        void ShowFileArray();
 
     private:
         List* children;

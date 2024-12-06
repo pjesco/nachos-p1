@@ -79,8 +79,9 @@ UserOpenFile* PCB::GetOpenUserFile(char* name) {
 }
 
 UserOpenFile* PCB::GetOpenUserFilebyID(int i) {
-    if (i < 0 || i >= MAXUSERFILES || openUserFiles[i]==NULL)
+    if (i < 0 || i >= MAXUSERFILES || openUserFiles[i]==NULL) {
         return NULL;
+    }
     
     return openUserFiles[i];
 }
@@ -115,4 +116,10 @@ int PCB::RemoveUserFile(char* name) {
         }
     }
     return -1;
+}
+
+void PCB::ShowFileArray() {
+    for (int i = 0; i < MAXUSERFILES; i++) {
+        printf("%d: %d\n", i, openUserFiles[i] == NULL);
+    }
 }

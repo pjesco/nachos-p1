@@ -44,6 +44,7 @@ extern Lock* pcbManagerLock;
 extern PCBManager* pcbManager;
 extern SOFManager* sofManager;
 extern Lock* sofManagerLock;
+extern Lock* fileLock;
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB

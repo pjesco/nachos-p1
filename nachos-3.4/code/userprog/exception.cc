@@ -50,7 +50,7 @@
 //----------------------------------------------------------------------
 
 void doClose(int fid) {
-    printf("Syscall Call: [%d] invoked Open.\n", 
+    printf("Syscall Call: [%d] invoked Close.\n", 
         currentThread->space->pcb->pid);
     
     SysOpenFile* ofile = sofManager->GetOpenFile(fid);
@@ -94,11 +94,15 @@ void doExit(int status) {
 
     //Close procs files
     int n = pcb->GetUserArraySize();
+
     for (int i = 0; i < n; i++) {
-        char* name = pcb->GetOpenUserFilebyID(i)->GetFileName();
-        SysOpenFile* sf = sofManager->HasFile(name);
-        if (sf != NULL) {
-            doClose(sf->GetFileID());
+        UserOpenFile* uf = pcb->GetOpenUserFilebyID(i);
+        if (uf != NULL) {
+            char* name = uf->GetFileName();
+            SysOpenFile* sf = sofManager->HasFile(name);
+            if (sf != NULL) {
+                doClose(sf->GetFileID());
+            }
         }
     }
 
@@ -442,6 +446,7 @@ OpenFileId doOpen(char* fileName) {
         fid = sofManager->AddFile(newFile, fileName);
     }
     currentThread->space->pcb->AddUserFile(fileName, fid, 0, index);
+    //currentThread->space->pcb->ShowFileArray();
     return fid;
 }
 
@@ -449,44 +454,52 @@ OpenFileId doOpen(char* fileName) {
 void doWrite( int bufva, int size, int fid) {
     printf("Syscall Call: [%d] invoked Write.\n", 
         currentThread->space->pcb->pid);
+    //printf("Write Phys Addr: %d\n",currentThread->space->Translate(bufva));
     char* buffer = new char[size+1];
-    //OpenFile* file = currentThread->space->pcb->GetOpenFile(fid);
-    OpenFile* file = sofManager->GetOpenFile(fid)->GetOpenFile();
-    char* name = sofManager->GetOpenFile(fid)->GetOpenFileName();
+    char* name;
+    OpenFile* file;
+    UserOpenFile* ret;
 
-    UserOpenFile* ret = currentThread->space->pcb->GetOpenUserFile(name);
-    if (ret == NULL) {
-        printf("Cannot Write: You have not opened this file\n");
-        return;
+    if (fid != ConsoleOutput) {
+
+        file = sofManager->GetOpenFile(fid)->GetOpenFile();
+        
+        name = sofManager->GetOpenFile(fid)->GetOpenFileName();
+        
+        ret = currentThread->space->pcb->GetOpenUserFile(name);
+        if (ret == NULL) {
+            printf("Cannot Write: You have not opened this file\n");
+            return;
+        }
     }
-
-    int offset = currentThread->space->pcb->GetOpenUserFile(name)->GetOffset();
-    
-    /*int counter = 0;
-    while( counter < size) {
-        file->ReadAt(&(machine->mainMemory[currentThread->spaceTranslate(buffer+counter)]),
-            1, offset+counter);
-        counter++;
-    }*/
-
 
     int i = 0;
     unsigned int physicalAddr = currentThread->space->Translate(bufva);
 
-    //file->Write(bufva,)
     bcopy(&(machine->mainMemory[physicalAddr]),&buffer[i],1);
-
 
     while (i < size) {
         i++;
         physicalAddr = currentThread->space->Translate(bufva+i);
+        //printf("Write Phys Addr: %d\n", physicalAddr);
         bcopy(&(machine->mainMemory[physicalAddr]),&buffer[i],1);
     }
 
-    buffer[size] = '\0';
+    if (fid == ConsoleOutput) {
+        for (int j = 0; j < size; j++) {
+            printf("%c",buffer[j]);
+        }
+        delete buffer;
+        return;
+    }
+    
+    int offset = ret->GetOffset();
+    for (int j = 0; j < size; j++) {
+        file->WriteAt(buffer+j, 1, offset + j);
+    }
+    ret->SetOffset(size);
 
-    int delta = file->Write(buffer, size);
-    currentThread->space->pcb->GetOpenUserFile(name)->SetOffset(delta);
+    delete buffer;
 }
 
 int doRead(int bufva, int size, OpenFileId id) {
@@ -494,25 +507,67 @@ int doRead(int bufva, int size, OpenFileId id) {
         currentThread->space->pcb->pid);
     char* buffer = new char[size+1];
     buffer[size] = '\0';
+    UserOpenFile* ret;
     //OpenFile* file = currentThread->space->pcb->GetOpenFile(id);
-    OpenFile* file = sofManager->GetOpenFile(id)->GetOpenFile();
-    char* name = sofManager->GetOpenFile(id)->GetOpenFileName();
-    int offset = currentThread->space->pcb->GetOpenUserFile(name)->GetOffset();
-    
-    UserOpenFile* ret = currentThread->space->pcb->GetOpenUserFile(name);
-    if (ret == NULL) {
-        printf("Cannot Write: You have not opened this file\n");
-        return -1;
+
+    int numBytes = 0;
+    if (id == ConsoleInput) {
+        //printf("In read consoleinput\n");
+       int j = 0;
+        while (j < size) {
+            buffer[j] = getchar();
+            if (buffer[j]=='\n') {
+                //printf("Break\n");
+                break;
+            }
+            j++;
+        }
+        for (int i = 0; i < size; i++) {
+            int physicalAddr = currentThread->space->Translate(bufva+i);
+            bcopy(&buffer[i], &(machine->mainMemory[physicalAddr]),1);
+    }
+    } else {
+        OpenFile* file = sofManager->GetOpenFile(id)->GetOpenFile();
+        int length = file->Length();
+        //printf("Length: %d\n", length);
+        char* name = sofManager->GetOpenFile(id)->GetOpenFileName();
+        int offset = currentThread->space->pcb->GetOpenUserFile(name)->GetOffset();
+        ret = currentThread->space->pcb->GetOpenUserFile(name);
+        if (ret == NULL) {
+            printf("Cannot Write: You have not opened this file\n");
+            return -1;
+        }
+        //printf("About to acquire lock\n");
+        fileLock->Acquire();
+        //printf("lock acquired\n");
+        for (int i = 0; i < size; i++) {
+            if (offset + i >= length) {
+                break;
+            }
+            file->ReadAt(buffer+i, 1, offset + i);
+            numBytes++;
+        }
+        fileLock->Release();
+        /*for (int i = 0; i < numBytes; i++) {
+            printf("Buff[%d]: %c, %d ", i, buffer[i], buffer[i]);
+            
+        }
+        printf("\n");*/
+
+        if (numBytes == 0) {
+            ret->SetOffset(numBytes);
+            return 0;
+        }
+        for (int i = 0; i < numBytes; i++) {
+            int physicalAddr = currentThread->space->Translate(bufva+i);
+            bcopy(&buffer[i], &(machine->mainMemory[physicalAddr]),1);
+        } 
+
+        size = min(numBytes, size);
+        ret->SetOffset(size);
     }
 
-    file->Read(buffer, size);
-
-    //unsigned int physicalAddr = currentThread->space->Translate(bufva);
-
-    for (int i = 0; i < size; i++) {
-        int physicalAddr = currentThread->space->Translate(bufva+i);
-        bcopy(&buffer[i], &(machine->mainMemory[physicalAddr]),1);
-    }
+    delete buffer;
     return size;
 }
 

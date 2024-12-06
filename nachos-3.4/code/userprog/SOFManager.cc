@@ -6,6 +6,7 @@ SOFManager::SOFManager(int maxFiles) {
     openFiles = new SysOpenFile*[maxFiles];
     maxF = maxFiles;
     bitmap->Mark(1);
+    bitmap->Mark(0);
 
     for (int i = 0; i < maxFiles; i++) {
         openFiles[i] = NULL;
@@ -55,7 +56,6 @@ int SOFManager::RemoveFile(int findex) {
 SysOpenFile* SOFManager::GetOpenFile(int index) {
     if (index < 0 || index >= maxF)
         return NULL;
-    
     return openFiles[index];
 }
 
