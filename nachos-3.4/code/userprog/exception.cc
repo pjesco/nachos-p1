@@ -366,7 +366,7 @@ void doYield() {
     //Printing Children for debugging
     //currentThread->space->pcb->CallPrint();
 
-    printf("System Call:[%d] invoked Yield\n",
+    printf("System Call: [%d] invoked Yield.\n",
         currentThread->space->pcb->pid);
     currentThread->Yield();
 }
