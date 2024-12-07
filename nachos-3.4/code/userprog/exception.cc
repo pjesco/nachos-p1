@@ -338,6 +338,19 @@ int doKill (int pid) {
     // Delete exited children and set parent null for non-exited ones
     pcb->DeleteExitedChildrenSetParentNull();
 
+    int n = pcb->GetUserArraySize();
+
+    for (int i = 0; i < n; i++) {
+        UserOpenFile* uf = pcb->GetOpenUserFilebyID(i);
+        if (uf != NULL) {
+            char* name = uf->GetFileName();
+            SysOpenFile* sf = sofManager->HasFile(name);
+            if (sf != NULL) {
+                doClose(sf->GetFileID());
+            }
+        }
+    }
+
     // Manage PCB memory As a child process
     if(pcb->parent == NULL) pcbManager->DeallocatePCB(pcb);
 
